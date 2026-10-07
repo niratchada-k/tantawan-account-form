@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHUNGAM - กรอกข้อมูลทางบัญชี</title>
+    <link rel="stylesheet" href="from-style.css">
+</head>
+<body>
+
+    <!-- ปุ่มสลับธีมกลางคืน / กลางวัน -->
+    <button class="liquid-btn" id="themeToggleBtn" style="position: fixed; top: 20px; right: 20px; width: 140px; padding: 10px; font-size: 14px; z-index: 1000; border: none; cursor: pointer;">
+        🌙 เปลี่ยนธีม
+    </button>
+
+    <!-- พื้นหลังดาววิบวับ (Canvas) -->
+    <canvas id="sky"></canvas>
+
+    <!-- ก้อนเบลอพาสเทลลอยไปมา -->
+    <div class="blob a"></div>
+    <div class="blob b"></div>
+    <div class="blob c"></div>
+    <div class="blob d"></div>
+    <div class="blob e"></div>
+
+    <!-- คอนเทนเนอร์หลัก จัดสองกล่องวางคู่กัน -->
+    <div class="main-wrapper">
+
+        <!-- ================= กล่องที่ 1: ฟอร์มกรอกข้อมูล (Box Left) ================= -->
+        <div class="glass-container form-box glow-box">
+            <div class="header-section">
+                <h2>กรอกข้อมูลทางบัญชี</h2>
+            </div>
+
+            <!-- ฝั่งขวา: ฟอร์มกรอกข้อมูลทางบัญชี -->
+            <div class="glass-right">
+                <!-- 1. ช่องรหัส -->
+                <div class="form-group">
+                    <label for="txtSeqNo">รหัส</label>
+                    <div class="input-glass">
+                        <input type="text" id="txtSeqNo" name="seqNo" placeholder="เช่น EMP-A-009">
+                    </div>
+                </div>
+                
+                <!-- 2. ช่องชื่อ - นามสกุล -->
+                <div class="form-group">
+                    <label for="txtFullName">ชื่อ - นามสกุล</label>
+                    <div class="input-glass">
+                        <input type="text" id="txtFullName" name="fullName" placeholder="กรอกชื่อ-นามสกุล">
+                    </div>
+                </div>
+                
+                <!-- 3. ช่องที่อยู่ -->
+                <div class="form-group">
+                    <label for="txtAddress">ที่อยู่</label>
+                    <div class="input-glass">
+                        <input type="text" id="txtAddress" name="address" placeholder="กรอกที่อยู่">
+                    </div>
+                </div>
+
+                <!-- 4. ช่องรหัสประจำตัว -->
+                <div class="form-group">
+                    <label for="txtEmpCode">รหัสประจำตัว</label>
+                    <div class="input-glass">
+                        <input type="text" id="txtEmpCode" name="empCode" placeholder="รหัสประจำตัว">
+                    </div>
+                </div>
+                
+                <!-- ปุ่มบันทึก -->
+                <div class="btn-wrap">
+                    <button class="liquid-btn" id="saveButton" type="button">
+                        <span class="lb-glow"></span>
+                        <span class="lb-sheen"></span>
+                        <span class="lb-spark"></span>
+                        <span class="lb-spark"></span>
+                        <span class="lb-spark"></span>
+                        <span class="lb-spark"></span>
+                        <span class="lb-label">บันทึกข้อมูล</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= กล่องที่ 2: ตารางพักข้อมูล (Box Right) ================= -->
+        <div class="glass-container record-box-container glow-box">
+            <div class="record-box">
+                <h3>รายการที่บันทึกแล้ว</h3>
+                <div class="table-scroll">
+                    <table id="recordTable">
+                        <thead>
+                            <tr><th>รหัส</th><th>ชื่อ - นามสกุล</th><th>ที่อยู่</th><th>รหัสประจำตัว</th></tr>
+                        </thead>
+                        <tbody id="recordBody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="back-btn" id="clearRecordsBtn" style="width:100%; margin-top:20px;">ล้างรายการทั้งหมด</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- หน้าต่าง Popup แจ้งเตือนสไตล์กระจกแก้ว -->
+    <div class="custom-modal" id="customModal">
+        <div class="modal-content glassmorphism-modal">
+            <div class="modal-icon" id="modalIcon">⚠️</div>
+            <p id="modalMessage">กรุณากรอกรหัสก่อนทำการบันทึกค่ะ!</p>
+            <button class="liquid-btn modal-btn" id="modalCloseBtn">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- หน้าต่าง Popup แบบเลือกได้หลายทาง -->
+    <div class="custom-modal" id="actionModal">
+        <div class="modal-content glassmorphism-modal">
+            <div class="modal-icon" id="actionModalIcon">🔄</div>
+            <p id="actionModalMessage">ต้องการทำรายการนี้ใช่ไหมคะ?</p>
+            <div class="modal-btn-row" id="actionModalButtons"></div>
+        </div>
+    </div>
+
+    <script src="from-script.js"></script>
+</body>
+</html>

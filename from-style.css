@@ -1,0 +1,339 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  --bg1: #ffffff;
+  --bg2: #f4f1ff;
+  --bg3: #eef6ff;
+  --bg4: #fff5f8;
+
+  --accent: #a89dff;
+  --pink: #f7b0d1;
+  --line: #ebebf3;
+
+  --border-speed: 7s;
+  --border-width: 2px;
+
+  --card: #ffffff;
+  --ink: #22232a;
+  --muted: #8e909c;
+  --placeholder: #b6b8c2;
+  --glow-core: 255,168,54;    
+  --glow-soft: 255,236,214;  
+  --shadow: 50,54,70;     
+  --radius: 20px;
+
+  --btn1: #d7d1ff;   
+  --btn2: #ffcce4;   
+  --btn3: #baffee;   
+  --btn4: #feffab;   
+  --btn5: #ffd9a0;   
+  --btn-glow: 168,157,255;
+  --btn-glow2: 255,177,94;
+}
+
+/* --- โหมดกลางคืน (Night Sky Mode - ตัวหนังสือขาวนวลสบายตา) --- */
+body.dark-mode {
+  --bg1: #151320;
+  --bg2: #1f1a30;
+  --bg3: #192230;
+  --bg4: #251824;
+
+  --card: rgba(30, 27, 45, 0.75);
+  --ink: #e2def8;
+  --line: #453c60;
+  --accent: #b8b0ff;
+  --pink: #ebb0c8;
+}
+
+body.dark-mode .glass-container {
+  background: rgba(121, 108, 165, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .header-section h2 {
+  color: #dfd8ff;
+  text-shadow: 0 2px 10px rgba(169, 159, 247, 0.3);
+}
+
+body.dark-mode label {
+  color: #cfc8e6; 
+}
+
+body.dark-mode .input-glass input {
+  background: rgba(40, 35, 60, 0.85);
+  color: #e8e6f3; 
+}
+
+body.dark-mode .input-glass input::placeholder {
+  color: #bcb5ce;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', 'Prompt', sans-serif; }
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    overflow-x: hidden;
+    background: linear-gradient(-45deg, var(--bg1), var(--bg2), var(--bg3), var(--bg4));
+    background-size: 400% 400%;
+    animation: drift 22s ease infinite;
+    position: relative;
+}
+
+@keyframes drift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+#sky {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .5;
+    pointer-events: none;
+    z-index: 0;
+    animation: floatBlob 18s ease-in-out infinite;
+}
+
+.blob.a { width: 360px; height: 360px; background: #d8d0ff; top: -110px; left: -80px; }
+.blob.b { width: 350px; height: 320px; background: #e9b0c9; bottom: -90px; right: -70px; animation-delay: -6s; }
+.blob.c { width: 300px; height: 240px; background: #8ebde6; top: 60%; left: 4%; animation-delay: -12s; }
+.blob.d { width: 320px; height: 300px; background: #aee6ae; top: 0; right: 0; }
+.blob.e { width: 400px; height: 300px; background: #55dbd0; top: 40%; left: 32%; }
+
+@keyframes floatBlob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -30px) scale(1.12); }
+    66%      { transform: translate(-30px, 25px) scale(.92); }
+}
+
+.dust {
+    position: fixed;
+    pointer-events: none;
+    z-index: 5;
+    font-size: 12px;
+    animation: dustOut 1s ease-out forwards;
+}
+
+@keyframes dustOut {
+    0% { opacity: .9; transform: translate(0, 0) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.2) rotate(160deg); }
+}
+
+/* --- Wrapper หลักวางสองกล่องคู่กัน --- */
+.main-wrapper {
+    display: flex;
+    gap: 35px;
+    width: 100%;
+    max-width: 2500px;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 2;
+}
+
+/* --- ตกแต่งโครงสร้างกล่องกระจกแก้ว (Glass Box) --- */
+.glass-container {
+    position: relative;
+    background: rgba(255, 255, 255, 0.35); 
+    backdrop-filter: blur(35px); 
+    -webkit-backdrop-filter: blur(35px);
+    border: 1px solid rgba(255, 255, 255, 0.8); 
+    border-radius: 40px;
+    box-sizing: border-box;
+    /* 👈 เอาอนิเมชันการลอยขึ้นลงออกแล้ว กล่องจะอยู่นิ่งมั่นคงเรียบร้อยครับ */
+}
+
+/* ⭐ กล่องกรอกข้อมูล (Box ซ้าย) ⭐ */
+.form-box {
+    flex: 1.8;           
+    max-width: 800px;    
+    padding: 60px 70px;  
+}
+
+/* ⭐ กล่องตาราง (Box ขวา) ⭐ */
+.record-box-container {
+    flex: 1;
+    max-width: 600px;
+    padding: 50px 45px;
+}
+
+.glass-container::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 44px;
+    padding: var(--border-width);
+    background: conic-gradient(
+        from var(--angle),
+        var(--line) 0deg 200deg,
+        var(--accent) 260deg,
+        var(--pink) 300deg,
+        var(--line) 340deg 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: rotateBorder var(--border-speed) linear infinite;
+    pointer-events: none;
+    z-index: 3;
+}
+
+@keyframes rotateBorder { to { --angle: 360deg; } }
+
+.glass-right { width: 100%; }
+
+.header-section { width: 100%; text-align: center; margin-bottom: 35px; }
+.header-section h2 { 
+    text-shadow: 0 2px 5px rgba(255, 255, 255, 0.9), 0 -2px 5px rgba(100, 80, 130, 0.1); 
+    letter-spacing: 0.5px; line-height: 1.2; color: #4A3B4C; font-size: 38px; font-weight: 700; margin: 0 0 10px 0; 
+}
+.header-section p { color: #8C6D7D; font-size: 15px; margin: 0; font-weight: 500; }
+
+.form-group { margin-bottom: 25px; width: 100%; }
+
+label { 
+    display: block; 
+    margin-bottom: 10px; 
+    font-size: 16px;      
+    color: #4A3B4C; 
+    font-weight: 600; 
+}
+
+/* ⭐ คืนค่าเอฟเฟกต์ไฟใต้ช่องกรอกแบบเดิมของคุณแก้ม 100% ⭐ */
+.input-glass { position: relative; width: 100%; z-index: 1; }
+.input-glass::before{
+    content:""; position:absolute; z-index:-1; pointer-events:none; left:8%; right:8%; top:-30px; height:50px; filter:blur(10px);
+    background: radial-gradient(ellipse 42% 100% at 50% 100%, rgba(var(--glow-soft),.9) 0%, rgba(255,222,186,.5) 26%, rgba(255,210,170,0) 70%);
+}
+.input-glass::after{
+    content:""; position:absolute; z-index:-1; pointer-events:none; left:20%; right:20%; bottom:-20px; height:40px; filter:blur(10px); animation:breathe 3.8s ease-in-out infinite;
+    background: radial-gradient(ellipse 46% 44% at 50% 8%, rgba(var(--glow-core),.9) 0%, rgba(255, 201, 102, 0.7) 22%, rgba(255,150,50,.3) 44%, rgba(165, 98, 26, 0) 84%);
+}
+
+@keyframes breathe{
+    0%,100%{ opacity:.8; transform:scale(1); }
+    50%    { opacity:1;  transform:scale(1.05); }
+}
+
+.input-glass input {
+    position: relative; z-index: 1; width: 100%; padding: 16px 20px; border: none; outline: none; background: var(--card); color: #080808;
+    font-size: 15px; font-family: 'Outfit', sans-serif; border-radius: var(--radius); transition: all 0.3s ease; box-sizing: border-box;
+    box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(var(--shadow), .06), 0 6px 14px -6px rgba(var(--shadow), .2), 0 16px 24px -14px rgba(var(--shadow), .3);
+}
+
+.input-glass input:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px 6px rgba(255, 255, 255, 1), 0 1px 1px rgba(var(--shadow), .06), 0 8px 18px -6px rgba(var(--shadow), .25), 0 22px 20px -14px rgba(var(--shadow), .3);
+}
+
+/* ⭐ คืนค่าปุ่มบันทึกแบบเดิมของคุณแก้มที่มีวิบวับ + Sheen + Spark 100% ⭐ */
+.btn-wrap { position: relative; width: 100%; margin-top: 10px; }
+.btn-wrap::before{
+    content: ""; position: absolute; inset: -3px; border-radius: 23px; z-index: 0;
+    background: conic-gradient(from var(--angle), var(--btn1), var(--btn2), var(--btn3), var(--btn5), var(--btn4), var(--btn1));
+    filter: blur(9px); opacity: .7; animation: rotateBorder 5s linear infinite; transition: opacity .35s ease, filter .35s ease; pointer-events: none;
+}
+.btn-wrap:hover::before{ opacity: 1; filter: blur(14px); }
+
+.liquid-btn {
+    position: relative; width: 100%; padding: 18px; border: 1px solid rgba(255,255,255,.85); border-radius: 20px; overflow: hidden; isolation: isolate; cursor: pointer;
+    color: #383636; font-size: 17px; font-weight: 700; font-family: 'Outfit','Prompt',sans-serif; letter-spacing: 1px; text-shadow: 0 1px 4px rgba(74,59,76,.35);
+    background: linear-gradient(120deg, var(--btn1) 0%, var(--btn2) 32%, var(--btn3) 62%, var(--btn4) 100%); background-size: 260% 260%;
+    animation: btnFlow 8s ease infinite, btnBreathe 3.6s ease-in-out infinite; transition: transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .35s ease; box-sizing: border-box;
+}
+
+@keyframes btnFlow{ 0%,100%{ background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes btnBreathe{
+    0%,100%{ box-shadow: 0 12px 28px rgba(var(--btn-glow),.38), 0 6px 16px rgba(var(--btn-glow2),.22), inset 0 1px 3px rgba(255,255,255,.9); }
+    50%{ box-shadow: 0 18px 40px rgba(var(--btn-glow),.55), 0 8px 22px rgba(var(--btn-glow2),.35), inset 0 1px 4px rgba(255,255,255,1); }
+}
+
+.liquid-btn .lb-glow{ position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; background: radial-gradient(190px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.6), transparent 65%); transition: opacity .25s ease; }
+.liquid-btn:hover .lb-glow{ opacity: 1; }
+.liquid-btn .lb-sheen{ position: absolute; top: 0; left: -130%; width: 65%; height: 100%; z-index: 2; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,255,255,.9), transparent); transform: skewX(-20deg); }
+.liquid-btn:hover .lb-sheen{ animation: lbSheen .9s ease forwards; }
+@keyframes lbSheen{ to{ left: 140%; } }
+
+.liquid-btn .lb-spark{ position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #fff; z-index: 3; pointer-events: none; opacity: 0; box-shadow: 0 0 8px 2px rgba(255,255,255,.95); animation: lbSparkle 2.6s ease-in-out infinite; }
+.liquid-btn .lb-spark:nth-child(3){ left: 15%; top: 28%; animation-delay: 0s; }
+.liquid-btn .lb-spark:nth-child(4){ left: 39%; top: 70%; animation-delay: .7s; }
+.liquid-btn .lb-spark:nth-child(5){ left: 65%; top: 25%; animation-delay: 1.3s; }
+.liquid-btn .lb-spark:nth-child(6){ left: 87%; top: 63%; animation-delay: 1.9s; }
+@keyframes lbSparkle{ 0%,100%{ opacity: 0; transform: scale(.3); } 50% { opacity: 1; transform: scale(1.4); } }
+
+.lb-label{ position: relative; z-index: 5; display: inline-flex; align-items: center; gap: 10px; }
+.liquid-btn:hover{ border-color: #fff; transform: translateY(-3px) scale(1.015); }
+.liquid-btn:active{ transform: translateY(1px) scale(.985); box-shadow: 0 5px 16px rgba(90,70,80,.25), 0 0 30px 6px rgba(255,198,146,.75); }
+
+.liquid-btn.is-loading{ pointer-events: none; }
+.liquid-btn.is-loading .lb-label::after{ content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: lbSpin .7s linear infinite; }
+@keyframes lbSpin{ to{ transform: rotate(360deg); } }
+
+.liquid-btn.is-done{
+  animation: none; pointer-events: none;
+  background: linear-gradient(120deg, #b8f2e6, #8effb7);
+  box-shadow: 0 14px 34px rgba(132, 250, 176, 0.4), inset 0 1px 3px rgba(255,255,255,.9);
+}
+.btn-wrap.done::before{ background: conic-gradient(from var(--angle), #b8f2e6, #e0fcf4, #84fab0, #b8f2e6); }
+.lb-check{ width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 26; stroke-dashoffset: 26; animation: lbDraw .45s .05s ease forwards; }
+@keyframes lbDraw{ to{ stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion:reduce){
+  .liquid-btn, .btn-wrap::before, .liquid-btn .lb-spark{ animation: none !important; }
+}
+
+.back-btn { margin-top: 15px; background: rgba(255, 255, 255, 0.4); font-size: 14px; padding: 10px; border: none; border-radius: 20px; cursor: pointer; color: #4A3B4C; font-weight: 600; }
+.back-btn:hover { background: rgba(255, 255, 255, 0.7); }
+
+/* --- ตารางพักข้อมูล (กล่องขวา) --- */
+.record-box { width: 100%; }
+.record-box h3 { font-size: 20px; color: #4A3B4C; margin-bottom: 15px; text-align: center; font-weight: 700; }
+.table-scroll { max-height: 380px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.6); }
+#recordTable { width: 100%; border-collapse: collapse; font-size: 13.5px; background: rgba(255, 255, 255, 0.6); }
+#recordTable th, #recordTable td { padding: 12px 14px; text-align: left; color: #4A3B4C; border-bottom: 1px solid var(--line); }
+#recordTable th { background: rgba(255, 255, 255, 0.8); position: sticky; top: 0; z-index: 1; font-weight: 700; }
+
+body.dark-mode .record-box h3, body.dark-mode #recordTable th, body.dark-mode #recordTable td { color: #e2def8; }
+body.dark-mode #recordTable { background: rgba(40, 35, 60, 0.7); }
+body.dark-mode #recordTable th { background: rgba(50, 42, 75, 0.9); }
+
+/* Responsive สำหรับจอเล็ก */
+@media (max-width: 1000px) {
+    .main-wrapper { flex-direction: column; align-items: center; }
+    .form-box, .record-box-container { width: 100%; max-width: 100%; }
+}
+
+/* Modal Style */
+.custom-modal { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 999; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+.custom-modal.show { opacity: 1; pointer-events: auto; }
+.glassmorphism-modal { width: 340px; padding: 35px 25px; text-align: center; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 25px; box-shadow: 0 20px 40px rgba(90, 70, 80, 0.15); display: flex; flex-direction: column; align-items: center; transform: scale(0.8); transition: transform 0.3s ease; }
+.custom-modal.show .glassmorphism-modal { transform: scale(1); }
+.modal-icon { font-size: 40px; margin-bottom: 12px; }
+.glassmorphism-modal p { font-size: 16px; color: #4A3B4C; margin-bottom: 25px; font-weight: 600; }
+.modal-btn { width: 130px; padding: 12px; font-size: 15px; }
+
+.modal-btn-row { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 4px; }
+.action-btn { width: 100%; padding: 13px; border: none; border-radius: 16px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: transform 0.15s ease; }
+.action-btn:hover { transform: translateY(-2px); }
+.action-btn--primary { background: linear-gradient(120deg, var(--btn1), var(--btn3)); color: #383636; }
+.action-btn--ghost { background: rgba(255, 255, 255, 0.55); color: #4A3B4C; border: 1px solid rgba(255,255,255,0.8); }
+.action-btn--cancel { background: transparent; color: #8C6D7D; border: 1px solid rgba(140, 109, 125, 0.3); }
+.action-btn--danger { background: linear-gradient(120deg, #ffb0b0, #ff8484); color: #5c1f1f; }
