@@ -14,6 +14,7 @@ function load(){
 function save(){
   if(isSample) return;
   try{localStorage.setItem(KEY,JSON.stringify({file:fileName,rows}))}catch(e){toast('บันทึกในเบราว์เซอร์ไม่ได้ พื้นที่อาจเต็ม')}
+  if(typeof syncBridge==='function')syncBridge();
 }
 function setSrc(){ if(!isSample) $('src').textContent=rows.length?`ข้อมูลจากไฟล์ ${fileName} · เก็บไว้ในเบราว์เซอร์เครื่องนี้ ปิดเว็บแล้วเปิดใหม่ยังอยู่`:'ยังไม่มีข้อมูล ลากไฟล์ export มาวางได้เลย'; }
 
@@ -247,6 +248,28 @@ window.sunflow={
     return `ok:${ok} fail:${bad}`;
   }
 };
+
+
+// สะพานเว็บ ↔ น้องบอท ผ่านหน้าเว็บ (DOM) — บอทอ่าน/เขียน attribute ของกล่องซ่อน #sunflowBridge ด้วย Inject Js Script
+//   data-ready = แถวที่รอน้องบอท (JSON เดียวกับ sunflow.ready())   ← บอทอ่าน
+//   data-ping  = เวลาที่บอทแวะมาเช็กล่าสุด                         ← บอทเขียนทุกรอบ (ใช้ทำไฟสถานะ)
+//   data-mark  = ผลการลง Excel (JSON เดียวกับ sunflow.mark())       ← บอทเขียน เว็บอ่านแล้วล้างทิ้ง
+const bridge=document.createElement('div');bridge.id='sunflowBridge';bridge.hidden=true;document.body.appendChild(bridge);
+function syncBridge(){bridge.setAttribute('data-ready',sunflow.ready())}
+new MutationObserver(()=>{const m=bridge.getAttribute('data-mark');if(m){bridge.removeAttribute('data-mark');sunflow.mark(m)}})
+  .observe(bridge,{attributes:true,attributeFilter:['data-mark']});
+syncBridge();
+// ไฟสถานะ: บอทแวะมาภายใน 10 วินาที = 🟢 พร้อม / ไม่งั้น = ⚪ ยังไม่ทำงาน
+const light=document.createElement('span');light.className='botlight';
+{const tb=$('themeBtn'),hd=document.querySelector('header');   // วางข้างปุ่มเปลี่ยนธีม ถ้าหน้าเว็บไม่มีปุ่มนี้ ให้ลอยมุมขวาบนแทน
+  if(tb&&tb.parentNode)tb.parentNode.insertBefore(light,tb);else if(hd)hd.appendChild(light);else{light.classList.add('float');document.body.appendChild(light)}}
+function lightTick(){
+  const on=Date.now()-(+bridge.getAttribute('data-ping')||0)<10000;
+  light.classList.toggle('on',on);
+  light.textContent=on?'🟢 น้องบอทพร้อม':'⚪ น้องบอทยังไม่ทำงาน';
+  light.title=on?'น้องบอทกำลังเฝ้าอยู่ กดส่งได้เลย':'กดไอคอน TCS SunFlow บนเดสก์ท็อปเพื่อเปิดน้องบอท';
+}
+setInterval(lightTick,2000);lightTick();
 
 // ธีมกลางวัน / กลางคืน
 function isDark(){const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches}
