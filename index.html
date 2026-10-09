@@ -3,122 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KHUNGAM - กรอกข้อมูลทางบัญชี</title>
+    <title>TCS SunFlow - เรียงข้อมูลผู้จำหน่าย</title>
     <link rel="icon" type="image/x-icon" href="icon_E2.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@500;600&display=swap">
     <link rel="stylesheet" href="from-style.css">
 </head>
 <body>
+<canvas id="sky"></canvas>
+<div class="blob a"></div><div class="blob b"></div><div class="blob c"></div><div class="blob d"></div><div class="blob e"></div>
 
-    <!-- ปุ่มสลับธีมกลางคืน / กลางวัน -->
-    <button class="liquid-btn" id="themeToggleBtn" style="position: fixed; top: 20px; right: 20px; width: 140px; padding: 10px; font-size: 14px; z-index: 1000; border: none; cursor: pointer;">
-        🌙 เปลี่ยนธีม
-    </button>
+<div class="page"><main class="card">
+  <header>
+    <svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="sunStroke" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="470" y2="470"><stop offset="0" stop-color="#9a8cff"/><stop offset="1" stop-color="#f08dbd"/></linearGradient></defs><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(12.857142857142858)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(38.57142857142857)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(64.28571428571429)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(90.0)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(115.71428571428572)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(141.42857142857144)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(167.14285714285714)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(192.85714285714286)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(218.57142857142858)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(244.28571428571428)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(270.0)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(295.71428571428567)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(321.4285714285714)"/><path d="M0,-80.0 C60.0,-140.8 33.0,-226.0 0,-240.0 C-33.0,-226.0 -60.0,-140.8 0,-80.0 Z" fill="#fff1c4" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(347.1428571428571)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(0.0)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(25.714285714285715)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(51.42857142857143)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(77.14285714285714)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(102.85714285714286)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(128.57142857142858)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(154.28571428571428)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(180.0)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(205.71428571428572)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(231.42857142857142)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(257.14285714285717)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(282.85714285714283)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(308.57142857142856)"/><path d="M0,-80.0 C56.0,-128.64 30.800000000000004,-194.0 0,-208.0 C-30.800000000000004,-194.0 -56.0,-128.64 0,-80.0 Z" fill="#ffd98a" stroke="url(#sunStroke)" stroke-width="8" stroke-linejoin="round" transform="translate(256 256) rotate(334.2857142857143)"/><circle cx="256" cy="256" r="100.0" fill="#7b4f36" stroke="url(#sunStroke)" stroke-width="9"/><circle cx="248.9" cy="262.5" r="5.2" fill="#f3c27a"/><circle cx="257.2" cy="242.5" r="5.2" fill="#f3c27a"/><circle cx="266.1" cy="269.1" r="5.2" fill="#f3c27a"/><circle cx="237.2" cy="252.7" r="5.2" fill="#f3c27a"/><circle cx="274.0" cy="244.5" r="5.2" fill="#f3c27a"/><circle cx="249.9" cy="278.6" r="5.2" fill="#f3c27a"/><circle cx="244.3" cy="233.5" r="5.2" fill="#f3c27a"/><circle cx="281.4" cy="265.3" r="5.2" fill="#f3c27a"/><circle cx="229.5" cy="266.9" r="5.2" fill="#f3c27a"/><circle cx="268.8" cy="228.6" r="5.2" fill="#f3c27a"/><circle cx="265.5" cy="286.3" r="5.2" fill="#f3c27a"/><circle cx="227.3" cy="239.4" r="5.2" fill="#f3c27a"/><circle cx="289.7" cy="248.6" r="5.2" fill="#f3c27a"/><circle cx="235.4" cy="285.3" r="5.2" fill="#f3c27a"/><circle cx="251.2" cy="219.3" r="5.2" fill="#f3c27a"/><circle cx="285.2" cy="280.6" r="5.2" fill="#f3c27a"/><circle cx="216.6" cy="257.6" r="5.2" fill="#f3c27a"/><circle cx="284.8" cy="227.4" r="5.2" fill="#f3c27a"/><circle cx="254.1" cy="297.6" r="5.2" fill="#f3c27a"/><circle cx="228.6" cy="223.2" r="5.2" fill="#f3c27a"/><circle cx="299.4" cy="261.8" r="5.2" fill="#f3c27a"/><circle cx="219.2" cy="281.6" r="5.2" fill="#f3c27a"/><circle cx="266.1" cy="211.3" r="5.2" fill="#f3c27a"/><circle cx="279.3" cy="296.6" r="5.2" fill="#f3c27a"/><circle cx="210.5" cy="241.5" r="5.2" fill="#f3c27a"/><circle cx="300.3" cy="235.6" r="5.2" fill="#f3c27a"/><circle cx="236.8" cy="301.8" r="5.2" fill="#f3c27a"/><circle cx="238.9" cy="208.4" r="5.2" fill="#f3c27a"/><circle cx="301.6" cy="280.0" r="5.2" fill="#f3c27a"/><circle cx="205.4" cy="269.3" r="5.2" fill="#f3c27a"/><circle cx="284.8" cy="211.2" r="5.2" fill="#f3c27a"/><circle cx="265.2" cy="309.3" r="5.2" fill="#f3c27a"/><circle cx="212.6" cy="222.4" r="5.2" fill="#f3c27a"/><circle cx="311.6" cy="251.4" r="5.2" fill="#f3c27a"/><circle cx="217.6" cy="297.5" r="5.2" fill="#f3c27a"/><circle cx="256.3" cy="198.6" r="5.2" fill="#f3c27a"/><circle cx="295.1" cy="299.1" r="5.2" fill="#f3c27a"/><circle cx="197.3" cy="250.6" r="5.2" fill="#f3c27a"/><circle cx="303.6" cy="219.9" r="5.2" fill="#f3c27a"/><circle cx="245.2" cy="315.5" r="5.2" fill="#f3c27a"/><circle cx="223.4" cy="204.2" r="5.2" fill="#f3c27a"/><circle cx="315.8" cy="272.4" r="5.2" fill="#f3c27a"/><circle cx="200.2" cy="284.6" r="5.2" fill="#f3c27a"/><circle cx="278.0" cy="196.5" r="5.2" fill="#f3c27a"/><circle cx="280.2" cy="315.4" r="5.2" fill="#f3c27a"/><circle cx="197.4" cy="228.2" r="5.2" fill="#f3c27a"/><circle cx="318.6" cy="236.7" r="5.2" fill="#f3c27a"/><circle cx="222.5" cy="313.2" r="5.2" fill="#f3c27a"/><circle cx="241.9" cy="190.6" r="5.2" fill="#f3c27a"/><circle cx="311.1" cy="295.2" r="5.2" fill="#f3c27a"/><circle cx="188.2" cy="264.4" r="5.2" fill="#f3c27a"/><circle cx="300.7" cy="203.5" r="5.2" fill="#f3c27a"/><circle cx="258.5" cy="325.6" r="5.2" fill="#f3c27a"/><circle cx="206.7" cy="206.0" r="5.2" fill="#f3c27a"/><circle cx="326.8" cy="259.6" r="5.2" fill="#f3c27a"/><circle cx="200.8" cy="301.6" r="5.2" fill="#f3c27a"/><circle cx="266.0" cy="184.5" r="5.2" fill="#f3c27a"/><circle cx="297.3" cy="316.0" r="5.2" fill="#f3c27a"/><circle cx="184.4" cy="239.5" r="5.2" fill="#f3c27a"/><circle cx="320.4" cy="219.5" r="5.2" fill="#f3c27a"/><circle cx="233.0" cy="327.0" r="5.2" fill="#f3c27a"/><circle cx="224.8" cy="187.5" r="5.2" fill="#f3c27a"/><circle cx="325.9" cy="285.6" r="5.2" fill="#f3c27a"/><circle cx="183.9" cy="281.5" r="5.2" fill="#f3c27a"/><circle cx="292.2" cy="187.9" r="5.2" fill="#f3c27a"/><circle cx="275.4" cy="331.2" r="5.2" fill="#f3c27a"/><circle cx="190.4" cy="213.3" r="5.2" fill="#f3c27a"/><circle cx="333.8" cy="243.0" r="5.2" fill="#f3c27a"/><circle cx="207.1" cy="318.6" r="5.2" fill="#f3c27a"/></svg>
+    <h1>TCS SunFlow<small>เรียงข้อมูลทางบัญชี</small></h1>
+    <button class="btn theme" id="themeBtn" type="button">🌙 เปลี่ยนธีม</button>
+  </header>
 
-    <!-- พื้นหลังดาววิบวับ (Canvas) -->
-    <canvas id="sky"></canvas>
+  <section class="drop" id="drop">
+    <p><strong>ลากไฟล์ Excel ที่ export จากโปรแกรมเดิมมาวางตรงนี้</strong> <span style="color:var(--muted)">(ชื่อไฟล์อะไรก็ได้ .xlsx / .xls)</span><br>
+      <span id="src">ยังไม่มีข้อมูล · เว็บอ่านไฟล์ในเครื่องนี้ ไม่ส่งไฟล์ออกไปไหน</span></p>
+    <label class="btn" for="file">📂 เลือกไฟล์</label>
+    <input id="file" type="file" accept=".xlsx,.xls" hidden>
+  </section>
 
-    <!-- ก้อนเบลอพาสเทลลอยไปมา -->
-    <div class="blob a"></div>
-    <div class="blob b"></div>
-    <div class="blob c"></div>
-    <div class="blob d"></div>
-    <div class="blob e"></div>
+  <div class="tools">
+    <div class="tools" id="chips"></div>
+    <input class="search" type="search" id="q" placeholder="🔍 ค้นหารหัสหรือชื่อ">
+    <select class="search" id="prefix" aria-label="กลุ่มรหัส"><option value="">ทุกกลุ่มรหัส</option></select>
+  </div>
 
-    <!-- คอนเทนเนอร์หลัก จัดสองกล่องวางคู่กัน -->
-    <div class="main-wrapper">
+  <div class="tablebox">
+    <table>
+      <thead><tr>
+        <th>รหัส<span class="col"></span></th>
+        <th style="width:24%">ชื่อ-นามสกุล<span class="col"></span></th>
+        <th style="width:38%">ที่อยู่<span class="col"></span></th>
+        <th style="width:200px">เลขประจำตัวผู้เสียภาษี<span class="col"></span></th>
+        <th>สถานะ</th>
+        <th><span class="col">ลบ</span></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
 
-        <!-- ================= กล่องที่ 1: ฟอร์มกรอกข้อมูล (Box Left) ================= -->
-        <div class="glass-container form-box glow-box">
-            <div class="header-section">
-                <h2>กรอกข้อมูลทางบัญชี</h2>
-            </div>
+  <div class="foot">
+    <div class="msg" id="footmsg"></div>
+    <div class="pager" id="pager"></div>
+    <button class="btn danger" id="clearAll" type="button">🗑️ ล้างทุกข้อมูล</button>
+    <button class="btn" id="clearDone" type="button">🧹 ล้างข้อมูลที่ครบแล้ว</button>
+    <button class="btn liquid" id="send" type="button">🌻 ส่งให้น้องบอท</button>
+  </div>
+</main></div>
 
-            <!-- ฝั่งขวา: ฟอร์มกรอกข้อมูลทางบัญชี -->
-            <div class="glass-right">
-                <!-- 1. ช่องรหัส -->
-                <div class="form-group">
-                    <label for="txtSeqNo">รหัส</label>
-                    <div class="input-glass">
-                        <input type="text" id="txtSeqNo" name="seqNo" placeholder="เช่น EMP-A-009">
-                    </div>
-                </div>
-                
-                <!-- 2. ช่องชื่อ - นามสกุล -->
-                <div class="form-group">
-                    <label for="txtFullName">ชื่อ - นามสกุล</label>
-                    <div class="input-glass">
-                        <input type="text" id="txtFullName" name="fullName" placeholder="กรอกชื่อ-นามสกุล">
-                    </div>
-                </div>
-                
-                <!-- 3. ช่องที่อยู่ -->
-                <div class="form-group">
-                    <label for="txtAddress">ที่อยู่</label>
-                    <div class="input-glass">
-                        <input type="text" id="txtAddress" name="address" placeholder="กรอกที่อยู่">
-                    </div>
-                </div>
+<div class="modal" id="modal" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="ico" id="mIco">⚠️</div>
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="row"><button class="btn liquid" id="mOk" type="button">ตกลง</button><button class="btn" id="mCancel" type="button">ยกเลิก</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
 
-                <!-- 4. ช่องรหัสประจำตัว -->
-                <div class="form-group">
-                    <label for="txtEmpCode">รหัสประจำตัว</label>
-                    <div class="input-glass">
-                        <input type="text" id="txtEmpCode" name="empCode" placeholder="รหัสประจำตัว">
-                    </div>
-                </div>
-                
-                <!-- ปุ่มบันทึก -->
-                <div class="btn-wrap">
-                    <button class="liquid-btn" id="saveButton" type="button">
-                        <span class="lb-glow"></span>
-                        <span class="lb-sheen"></span>
-                        <span class="lb-spark"></span>
-                        <span class="lb-spark"></span>
-                        <span class="lb-spark"></span>
-                        <span class="lb-spark"></span>
-                        <span class="lb-label">บันทึกข้อมูล</span>
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ================= กล่องที่ 2: ตารางพักข้อมูล (Box Right) ================= -->
-        <div class="glass-container record-box-container glow-box">
-            <div class="record-box">
-                <h3>รายการที่บันทึกแล้ว</h3>
-                <div class="table-scroll">
-                    <table id="recordTable">
-                        <thead>
-                            <tr><th>รหัส</th><th>ชื่อ - นามสกุล</th><th>ที่อยู่</th><th>รหัสประจำตัว</th></tr>
-                        </thead>
-                        <tbody id="recordBody"></tbody>
-                    </table>
-                </div>
-                <button type="button" class="back-btn" id="clearRecordsBtn" style="width:100%; margin-top:20px;">ล้างรายการทั้งหมด</button>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- หน้าต่าง Popup แจ้งเตือนสไตล์กระจกแก้ว -->
-    <div class="custom-modal" id="customModal">
-        <div class="modal-content glassmorphism-modal">
-            <div class="modal-icon" id="modalIcon">⚠️</div>
-            <p id="modalMessage">กรุณากรอกรหัสก่อนทำการบันทึกค่ะ!</p>
-            <button class="liquid-btn modal-btn" id="modalCloseBtn">ตกลง</button>
-        </div>
-    </div>
-
-    <!-- หน้าต่าง Popup แบบเลือกได้หลายทาง -->
-    <div class="custom-modal" id="actionModal">
-        <div class="modal-content glassmorphism-modal">
-            <div class="modal-icon" id="actionModalIcon">🔄</div>
-            <p id="actionModalMessage">ต้องการทำรายการนี้ใช่ไหมคะ?</p>
-            <div class="modal-btn-row" id="actionModalButtons"></div>
-        </div>
-    </div>
-
-    <script src="from-script.js"></script>
+<!-- อ่านไฟล์ Excel ในเบราว์เซอร์ (SheetJS) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="from-script.js"></script>
 </body>
 </html>
