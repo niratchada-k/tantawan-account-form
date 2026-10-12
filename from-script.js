@@ -203,15 +203,8 @@ $('send').addEventListener('click',e=>{
   toast(n?`ส่งให้น้องบอทแล้ว ${n.toLocaleString()} ราย 🌻`:'ไม่มีรายการใหม่ที่ต้องส่ง');
   if(n){const b=e.currentTarget.getBoundingClientRect();sparkBurst(b.left+b.width/2,b.top+b.height/2)}
 });
-// ปุ่ม 2: ล้างแถวที่ข้อมูลครบ เหลือไว้แค่แถวที่ยังมีช่องว่าง
-$('clearDone').addEventListener('click',()=>{
-  const full=rows.filter(complete), notSent=full.filter(r=>r.s!=='done').length;
-  if(!full.length){toast('ยังไม่มีแถวที่ข้อมูลครบ');return}
-  ask({ico:'🧹',title:`ล้าง ${full.length.toLocaleString()} แถวที่ข้อมูลครบ`,
-    text:notSent?`ในนี้มี ${notSent.toLocaleString()} แถวที่ยังไม่ลง Excel ถ้าล้างตอนนี้ บอทจะไม่ได้ข้อมูลแถวนั้น แนะนำให้ส่งให้น้องบอทก่อน`:'ทุกแถวที่จะล้างลง Excel แล้ว จะเหลือไว้แค่แถวที่ยังมีช่องว่างให้เติมต่อ',
-    ok:notSent?'ล้างเลย':'ล้าง'},()=>{
-      rows=rows.filter(r=>!complete(r));save();setSrc();fillPrefix();render();toast(`ล้างแล้ว เหลือ ${rows.length.toLocaleString()} แถวที่ยังมีช่องว่าง`)});
-});
+// (ตัดปุ่ม "ล้างข้อมูลที่ครบแล้ว" ออก: ทุกแถวต้องลง Excel อยู่แล้ว และแถวที่ลงสำเร็จหายจากตารางเอง ปุ่มนี้เหลือแค่ความเสี่ยงลบแถวที่ยังไม่ส่ง)
+{const b=$('clearDone');if(b)b.remove();}
 // ปุ่ม 1: ล้างทุกข้อมูล
 $('clearAll').addEventListener('click',()=>{
   if(!rows.length){toast('ไม่มีข้อมูลให้ล้าง');return}
