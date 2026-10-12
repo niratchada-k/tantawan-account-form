@@ -19,6 +19,7 @@
 const STORAGE_KEY = 'tcs_queue';  // ชื่อที่ใช้เก็บข้อมูลในเบราว์เซอร์
 const BATCH = 200;                // วาดตารางทีละ 200 แถว เลื่อนใกล้ล่างสุดค่อยเติม
 const BOT_TIMEOUT = 10000;        // น้องบอทไม่แวะมาเกิน 10 วินาที = ไฟสถานะดับ
+const BUSY_MAX = 30 * 60000;      // กำลังลง Excel นานสุด 30 นาที เกินนี้ถือว่าน้องบอทหยุดไปแล้ว
  
 // ข้อมูลแต่ละแถว: { id, c: รหัส, n: ชื่อ, a: ที่อยู่, t: เลขภาษี, s: สถานะ, pad: เติม 0 แล้ว, msg: สาเหตุที่ลงไม่สำเร็จ }
 // สถานะ s: 'draft' = ยังไม่ส่ง / 'ready' = รอน้องบอท / 'fail' = ลงไม่สำเร็จ  (ลงสำเร็จแล้วแถวจะถูกเอาออกจากตาราง)
@@ -377,10 +378,11 @@ function ask({ ico = '⚠️', title, text, ok = 'ตกลง', cancel = 'ย�
   $('mTitle').textContent = title;
   $('mText').textContent = text;
   $('mOk').textContent = ok;
-  $('mCancel').textContent = cancel;
+  $('mCancel').textContent = cancel || '';
+  $('mCancel').hidden = !cancel;             // cancel: null = ป๊อปอัปปุ่มเดียว (แค่ "ตกลง")
   onOk = fn;
   $('modal').hidden = false;
-  $('mCancel').focus();
+  (cancel ? $('mCancel') : $('mOk')).focus();
 }
 $('mOk').addEventListener('click', () => { $('modal').hidden = true; if (onOk) onOk(); });
 $('mCancel').addEventListener('click', () => { $('modal').hidden = true; });
@@ -480,7 +482,7 @@ $('clearAll').addEventListener('click', () => {
 /* น้องบอท (UiPath) ใช้ Inject Js Script อ่าน/เขียน attribute ของกล่องซ่อน #sunflowBridge ("ตู้ไปรษณีย์")
      data-ready = งานที่รอน้องบอท {file, rows:[{id,c,n,a,t}]}   ← น้องบอทอ่าน
      data-ping  = เวลาที่น้องบอทแวะมาล่าสุด                    ← น้องบอทเขียนทุกรอบ (ใช้ทำไฟสถานะ)
-     data-mark  = ผลการลง Excel [{id, ok, msg}]                ← น้องบอทเขียน เว็บอ่านแล้วล้างทิ้ง
+     data-mark  = ผลการลง Excel [{id, ok, msg, row}]           ← น้องบอทเขียน เว็บอ่านแล้วล้างทิ้ง (row = แถวใน Excel ที่ลงสำเร็จ)
    ใช้กล่องบนหน้าเว็บแทนตัวแปร เพราะส่วนขยาย Chrome ของ UiPath อาจมองไม่เห็นตัวแปรของเว็บ แต่เห็นหน้าเว็บเสมอ */
  
 const bridge = $('sunflowBridge') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'sunflowBridge', hidden: true }));
@@ -513,9 +515,23 @@ function applyMark(json) {
     else { r.s = 'fail'; r.msg = x.msg || 'ไม่ทราบสาเหตุ'; bad++; }
   }
   if (done.size) rows = rows.filter(r => !done.has(r));
-  save(); fillPrefix(); render();
+  busySince = 0;   // ได้ผลแล้ว = น้องบอทลง Excel เสร็จรอบนี้
+  save(); fillPrefix(); render(); updateLight();
  
-  if (ok && !bad) toast(`น้องบอทลง Excel แล้ว ${num(ok)} ราย ✓ (เอาออกจากตารางแล้ว)`);
+  if (ok && !bad) {
+    // ป๊อปอัปค้างจนกว่าจะกด "ตกลง" (กันพนักงานพลาดไม่เห็น) + บอกแถวใน Excel ถ้าน้องบอทส่งมา
+    const nums = list.filter(x => x.ok && x.row).map(x => +x.row).filter(Boolean);
+    const where = nums.length
+      ? `อยู่ที่แถว ${Math.min(...nums)}` + (nums.length > 1 ? `–${Math.max(...nums)}` : '') + ' ในชีต Vendor\n'
+      : '';
+    ask({
+      ico: '✅',
+      title: `ลง Excel เรียบร้อย ${num(ok)} ราย`,
+      text: where + 'น้องบอทตรวจซ้ำแล้วว่าข้อมูลตรง และเอาแถวที่ลงแล้วออกจากตารางให้แล้ว',
+      ok: 'ตกลง',
+      cancel: null,
+    });
+  }
   if (bad) {
     // ป๊อปอัปค้างจนกว่าจะกด: "ส่งอีกครั้ง" = ส่งแถวที่ไม่สำเร็จกลับไปให้น้องบอท (ไม่ต้องเปิดบอทใหม่)
     const why = [...new Set(list.filter(x => !x.ok).map(x => x.msg || 'ไม่ทราบสาเหตุ'))].join(' / ');
@@ -538,23 +554,43 @@ function applyMark(json) {
   return `ok:${ok} fail:${bad}`;
 }
  
+// น้องบอทแวะมา (data-ping) ตอนมีงานรอ = น้องบอทหยิบงานไปแล้ว → กำลังลง Excel
 // น้องบอทวางผลใน data-mark → อ่านทันทีแล้วล้างทิ้ง
-new MutationObserver(() => {
+let busySince = 0;
+new MutationObserver(list => {
+  for (const m of list) {
+    if (m.attributeName === 'data-ping' && rows.some(r => r.s === 'ready')) busySince = Date.now();
+  }
   const mark = bridge.getAttribute('data-mark');
   if (mark) {
     bridge.removeAttribute('data-mark');
     applyMark(mark);
   }
-}).observe(bridge, { attributes: true, attributeFilter: ['data-mark'] });
+  updateLight();
+}).observe(bridge, { attributes: true, attributeFilter: ['data-mark', 'data-ping'] });
  
-// ไฟสถานะ: น้องบอทแวะมาภายใน 10 วินาที = 🟢 พร้อม / ไม่งั้น = ⚪ ยังไม่ทำงาน
+// ไฟสถานะ 3 แบบ
+//   🟡 กำลังลง Excel = น้องบอทหยิบงานไปแล้ว ยังไม่ส่งผลกลับ (ตอนนี้น้องบอทอยู่ใน Excel จึงไม่ได้แวะมาที่เว็บ)
+//   🟢 พร้อม        = น้องบอทแวะมาภายใน 10 วินาที
+//   ⚪ ยังไม่ทำงาน   = นอกเหนือจากนี้
+// ระหว่าง 🟡 ล็อกตาราง / ช่องลากไฟล์ / ปุ่มล่าง ไว้ก่อน กันแก้ข้อมูลที่น้องบอทกำลังลงอยู่
 const light = $('botLight');
+const LOCK_WHILE_BUSY = ['drop', 'rows', 'clearAll', 'send'];
 function updateLight() {
   if (!light) return;
-  const on = Date.now() - (+bridge.getAttribute('data-ping') || 0) < BOT_TIMEOUT;
-  light.classList.toggle('on', on);
-  light.textContent = on ? '🟢 น้องบอทพร้อม' : '⚪ น้องบอทยังไม่ทำงาน';
-  light.title = on ? 'น้องบอทกำลังเฝ้าอยู่ กดส่งได้เลย' : 'กดไอคอน TCS SunFlow บนเดสก์ท็อปเพื่อเปิดน้องบอท';
+  const now = Date.now();
+  const busy = busySince > 0 && now - busySince < BUSY_MAX && rows.some(r => r.s === 'ready');
+  const on = now - (+bridge.getAttribute('data-ping') || 0) < BOT_TIMEOUT;
+  light.classList.toggle('busy', busy);
+  light.classList.toggle('on', on && !busy);
+  light.textContent = busy ? '🟡 น้องบอทกำลังลง Excel… อย่าเพิ่งปิด Chrome'
+                    : on   ? '🟢 น้องบอทพร้อม'
+                    :        '⚪ น้องบอทยังไม่ทำงาน';
+  light.title = busy ? 'รอจนมีป๊อปอัปแจ้งผล ระหว่างนี้แก้ข้อมูลในตารางไม่ได้'
+              : on   ? 'น้องบอทกำลังเฝ้าอยู่ กดส่งได้เลย'
+              :        'กดไอคอน TCS SunFlow บนเดสก์ท็อปเพื่อเปิดน้องบอท';
+  LOCK_WHILE_BUSY.forEach(id => { const el = $(id); if (el) el.inert = busy; });
+  document.body.classList.toggle('botbusy', busy);
 }
  
 // เปิดไว้ให้ลองเรียกจาก Console ได้ (เช่น sunflow.ready())
