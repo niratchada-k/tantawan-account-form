@@ -68,7 +68,7 @@ function save() {
  
 function showSource() {
   $('src').textContent = rows.length
-    ? `ไฟล์ ${fileName} · ข้อมูลเก็บไว้ในเครื่องนี้ ปิดหน้าเว็บแล้วไม่หาย`
+    ? `ไฟล์ ${fileName} ·`
     : 'ยังไม่มีข้อมูล';
 }
  
