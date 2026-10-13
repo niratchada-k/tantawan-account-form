@@ -20,6 +20,7 @@ const STORAGE_KEY = 'tcs_queue';  // ชื่อที่ใช้เก็บ�
 const BATCH = 200;                // วาดตารางทีละ 200 แถว เลื่อนใกล้ล่างสุดค่อยเติม
 const BOT_TIMEOUT = 10000;        // น้องบอทไม่แวะมาเกิน 10 วินาที = ไฟสถานะดับ
 const BUSY_MAX = 30 * 60000;      // กำลังลง Excel นานสุด 30 นาที เกินนี้ถือว่าน้องบอทหยุดไปแล้ว
+const CONTACT = 'ผู้ดูแลระบบ';    // คนที่ให้พนักงานติดต่อเมื่อบันทึกไม่สำเร็จและแก้เองไม่ได้ (เปลี่ยนเป็นชื่อคน/แผนกได้)
  
 // ข้อมูลแต่ละแถว: { id, c: รหัส, n: ชื่อ, a: ที่อยู่, t: เลขภาษี, s: สถานะ, pad: เติม 0 แล้ว, msg: สาเหตุที่ลงไม่สำเร็จ }
 // สถานะ s: 'draft' = ยังไม่ส่ง / 'ready' = รอน้องบอท / 'fail' = ลงไม่สำเร็จ  (ลงสำเร็จแล้วแถวจะถูกเอาออกจากตาราง)
@@ -60,15 +61,15 @@ function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ file: fileName, rows }));
   } catch (e) {
-    toast('บันทึกในเบราว์เซอร์ไม่ได้ พื้นที่อาจเต็ม');
+    toast('บันทึกข้อมูลในเบราว์เซอร์ไม่ได้ (พื้นที่เต็ม)');
   }
   syncBridge();   // อัปเดตงานในตู้ไปรษณีย์ให้น้องบอททุกครั้งที่ข้อมูลเปลี่ยน
 }
  
 function showSource() {
   $('src').textContent = rows.length
-    ? `ข้อมูลจากไฟล์ ${fileName} · เก็บไว้ในเบราว์เซอร์เครื่องนี้ ปิดเว็บแล้วเปิดใหม่ยังอยู่`
-    : 'ยังไม่มีข้อมูล ลากไฟล์ export มาวางได้เลย';
+    ? `ไฟล์ ${fileName} · ข้อมูลเก็บไว้ในเครื่องนี้ ปิดหน้าเว็บแล้วไม่หาย`
+    : 'ยังไม่มีข้อมูล';
 }
  
  
@@ -164,11 +165,11 @@ function readFile(file) {
         if (got.length) break;
       }
     } catch (err) {
-      toast('อ่านไฟล์ไม่ได้ ต้องเป็นไฟล์ .xlsx หรือ .xls');
+      toast('เปิดไฟล์ไม่ได้ รองรับเฉพาะ .xlsx และ .xls');
       return;
     }
     if (!got.length) {
-      toast('ไม่พบข้อมูลในไฟล์นี้ ต้องเป็นไฟล์ export แบบ 2F หรือตารางที่มีหัวคอลัมน์ รหัส / ชื่อ / ที่อยู่ / เลขประจำตัว');
+      toast('ไม่พบข้อมูล Vendor ในไฟล์นี้');
       return;
     }
     got.forEach(r => { r.id = newId(); });
@@ -176,14 +177,14 @@ function readFile(file) {
     const apply = () => {
       rows = got; fileName = file.name; filter = 'all'; shown = BATCH;
       save(); showSource(); fillPrefix(); render();
-      toast(`เรียงข้อมูลแล้ว ${num(got.length)} ราย ✨`);
+      toast(`นำเข้าข้อมูล ${num(got.length)} รายการ`);
       const b = $('drop').getBoundingClientRect();
       sparkBurst(b.left + b.width / 2, b.top + b.height / 2);
     };
     if (rows.length) {
-      ask({ ico: '📂', title: `แทนที่ด้วยไฟล์ ${file.name}?`,
-            text: `ตารางตอนนี้ยังมี ${num(rows.length)} แถวที่ยังไม่ลง Excel ถ้าแทนที่ แถวเหล่านั้นจะหายไป แนะนำให้ส่งให้น้องบอทก่อน`,
-            ok: 'แทนที่เลย' }, apply);
+      ask({ ico: '📂', title: 'แทนที่ข้อมูลเดิม?',
+            text: `มี ${num(rows.length)} รายการที่ยังไม่ได้บันทึก หากแทนที่ด้วย ${file.name} รายการเหล่านี้จะถูกลบ`,
+            ok: 'แทนที่' }, apply);
     } else {
       apply();
     }
@@ -253,7 +254,7 @@ const CHIPS = [
   ['cut',   'ที่อยู่ต้องตรวจ',    'warn'],
   ['pad',   'เติม 0 แล้ว',       'warn'],
   ['dup',   'รหัสซ้ำ',           'dup'],
-  ['fail',  'ลงไม่สำเร็จ',       'empty'],
+  ['fail',  'บันทึกไม่สำเร็จ',    'empty'],
 ];
 function renderChips() {
   const count = {
@@ -273,25 +274,25 @@ function renderChips() {
   const waiting = rows.filter(r => r.s === 'draft' || r.s === 'fail').length;
   const ready = rows.filter(r => r.s === 'ready').length;
   $('footmsg').textContent = [
-    waiting && `ยังไม่ได้ส่ง ${num(waiting)} ราย`,
-    ready && `รอน้องบอท ${num(ready)} ราย`,
+    waiting && `ยังไม่ได้ส่ง ${num(waiting)} รายการ`,
+    ready && `รอบันทึก ${num(ready)} รายการ`,
   ].filter(Boolean).join(' · ');
 }
  
 // ป้ายในคอลัมน์ "สถานะ"
 const ADDR_TAG = {
-  stray: 'มีคำ "เงื่อนไข…" ปน · ลบออกเอง',
-  label: 'ท้ายที่อยู่ขาด (เช่น จ. แล้วไม่มีชื่อ)',
-  zip:   'ขาดรหัสไปรษณีย์',
+  stray: 'มีข้อความ "เงื่อนไข…" ปน',
+  label: 'ที่อยู่ไม่ครบ',
+  zip:   'ไม่มีรหัสไปรษณีย์',
 };
 function tagsHtml(r) {
   let html = '';
-  if (r.s === 'ready') html += '<span class="tag ready">รอน้องบอท</span>';
-  if (r.s === 'fail')  html += `<span class="tag fail">⚠️ ลงไม่สำเร็จ${r.msg ? ': ' + esc(r.msg) : ''}</span>`;
+  if (r.s === 'ready') html += '<span class="tag ready">รอบันทึก</span>';
+  if (r.s === 'fail')  html += `<span class="tag fail" title="${esc(reason(r.msg))}">บันทึกไม่สำเร็จ</span>`;
   const flag = addrFlag(r);
   if (flag)            html += `<span class="tag cut">${ADDR_TAG[flag]}</span>`;
   if (r.pad)           html += '<span class="tag pad">เติม 0</span>';
-  if (dupCodes.has(r.c)) html += '<span class="tag dup">รหัสซ้ำ · ลง Excel เป็นแถวใหม่</span>';
+  if (dupCodes.has(r.c)) html += '<span class="tag dup">รหัสซ้ำ</span>';
   return html;
 }
  
@@ -312,7 +313,7 @@ function render() {
   shown = Math.min(Math.max(shown, BATCH), Math.max(current.length, BATCH));
   $('rows').innerHTML = current.length
     ? current.slice(0, shown).map(rowHtml).join('')
-    : `<tr><td colspan="6" class="none">${rows.length ? 'ไม่มีแถวที่ตรงกับตัวกรองนี้' : 'ยังไม่มีข้อมูล ลากไฟล์ export มาวางด้านบนได้เลย'}</td></tr>`;
+    : `<tr><td colspan="6" class="none">${rows.length ? 'ไม่มีแถวที่ตรงกับตัวกรองนี้' : 'ยังไม่มีข้อมูล ลากไฟล์ export มาวางด้านบน'}</td></tr>`;
   fitAll();
   showCount();
 }
@@ -418,7 +419,7 @@ $('rows').addEventListener('click', e => {
   const btn = e.target.closest('[data-del]');
   if (!btn) return;
   const i = +btn.dataset.del, r = rows[i];
-  ask({ ico: '✕', title: `ลบแถว ${r.c}?`, text: `${r.n || '(ไม่มีชื่อ)'} จะถูกลบออกจากตารางในเว็บ`, ok: 'ลบแถวนี้' }, () => {
+  ask({ ico: '✕', title: `ลบรายการ ${r.c}?`, text: `${r.n || '(ไม่มีชื่อ)'} จะถูกลบออกจากตารางนี้`, ok: 'ลบ' }, () => {
     rows.splice(i, 1);
     save(); fillPrefix(); render();
     toast(`ลบ ${r.c} แล้ว`);
@@ -457,7 +458,7 @@ $('send').addEventListener('click', e => {
     if (r.s === 'draft' || r.s === 'fail') { r.s = 'ready'; delete r.msg; n++; }
   });
   save(); render();
-  toast(n ? `ส่งให้น้องบอทแล้ว ${num(n)} ราย 🌻` : 'ไม่มีรายการใหม่ที่ต้องส่ง');
+  toast(n ? `ส่งบันทึก ${num(n)} รายการ` : 'ไม่มีรายการที่รอส่ง');
   if (n) {
     const b = e.currentTarget.getBoundingClientRect();
     sparkBurst(b.left + b.width / 2, b.top + b.height / 2);
@@ -466,14 +467,14 @@ $('send').addEventListener('click', e => {
  
 // 🗑️ ล้างทุกข้อมูล (ข้อมูลที่ลง Excel ไปแล้วไม่หาย)
 $('clearAll').addEventListener('click', () => {
-  if (!rows.length) { toast('ไม่มีข้อมูลให้ล้าง'); return; }
-  ask({ ico: '🗑️', title: 'ล้างทุกข้อมูลในหน้านี้?',
-        text: `จะลบ ${num(rows.length)} แถวที่ยังไม่ลง Excel ออกจากหน้านี้ ข้อมูลที่ลง Excel ไปแล้วจะไม่หาย`,
-        ok: 'ล้างทั้งหมด' }, () => {
+  if (!rows.length) { toast('ไม่มีข้อมูล'); return; }
+  ask({ ico: '🗑️', title: 'ล้างข้อมูลทั้งหมด?',
+        text: `${num(rows.length)} รายการในหน้านี้จะถูกลบ (ข้อมูลที่บันทึกใน Excel แล้วไม่ได้รับผลกระทบ)`,
+        ok: 'ล้างข้อมูล' }, () => {
     rows = []; fileName = '';
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
     syncBridge(); showSource(); fillPrefix(); render();
-    toast('ล้างทุกข้อมูลแล้ว');
+    toast('ล้างข้อมูลแล้ว');
   });
 });
  
@@ -500,6 +501,15 @@ function syncBridge() {
  
 // รับผลจากน้องบอท: ok = ลงและตรวจแล้ว → เอาออกจากตาราง / ไม่ ok = ค้างไว้พร้อม ⚠️ และสาเหตุ
 // ทำเฉพาะแถวที่ยัง "รอน้องบอท" (ถ้าถูกแก้ระหว่างนั้น แถวจะกลับเป็นยังไม่ส่ง และไม่ถูกนับ)
+// สาเหตุแบบสั้นสำหรับแสดงผล (ตัดคำซ้ำที่น้องบอทใส่มา เช่น "ลง Excel ไม่สำเร็จ:" / "(ไม่มีข้อมูลลง Excel)")
+function reason(msg) {
+  return clean(msg || 'ไม่ทราบสาเหตุ')
+    .replace(/^ลง Excel ไม่สำเร็จ:\s*/, '')
+    .replace(/\s*จึงไม่บันทึกไฟล์/, '')
+    .replace(/\s*\(ไม่มีข้อมูลลง Excel\)/, '')
+    .replace(/^ไฟล์ Excel ถูกเปิดอยู่$/, 'ไฟล์ Excel เปิดอยู่') || 'ไม่ทราบสาเหตุ';
+}
+ 
 function applyMark(json) {
   let list;
   try { list = typeof json === 'string' ? JSON.parse(json) : json; }
@@ -522,34 +532,47 @@ function applyMark(json) {
     // ป๊อปอัปค้างจนกว่าจะกด "ตกลง" (กันพนักงานพลาดไม่เห็น) + บอกแถวใน Excel ถ้าน้องบอทส่งมา
     const nums = list.filter(x => x.ok && x.row).map(x => +x.row).filter(Boolean);
     const where = nums.length
-      ? `อยู่ที่แถว ${Math.min(...nums)}` + (nums.length > 1 ? `–${Math.max(...nums)}` : '') + ' ในชีต Vendor\n'
+      ? `แถว ${Math.min(...nums)}` + (nums.length > 1 ? `–${Math.max(...nums)}` : '') + ' · ชีต Vendor\n'
       : '';
     ask({
       ico: '✅',
-      title: `ลง Excel เรียบร้อย ${num(ok)} ราย`,
-      text: where + 'น้องบอทตรวจซ้ำแล้วว่าข้อมูลตรง และเอาแถวที่ลงแล้วออกจากตารางให้แล้ว',
+      title: `บันทึกสำเร็จ ${num(ok)} รายการ`,
+      text: where + 'ตรวจสอบความถูกต้องแล้ว',
       ok: 'ตกลง',
       cancel: null,
     });
   }
   if (bad) {
-    // ป๊อปอัปค้างจนกว่าจะกด: "ส่งอีกครั้ง" = ส่งแถวที่ไม่สำเร็จกลับไปให้น้องบอท (ไม่ต้องเปิดบอทใหม่)
-    const why = [...new Set(list.filter(x => !x.ok).map(x => x.msg || 'ไม่ทราบสาเหตุ'))].join(' / ');
-    const fileOpen = /เปิดอยู่/.test(why);
-    ask({
-      ico: '⚠️',
-      title: `ลง Excel ไม่สำเร็จ ${num(bad)} ราย` + (ok ? ` (สำเร็จ ${num(ok)} ราย)` : ''),
-      text: `สาเหตุ: ${why}\n\n`
-          + (fileOpen ? 'ปิดไฟล์ Excel ก่อน แล้วกด "ส่งอีกครั้ง" น้องบอทจะลงให้ต่อเอง' : 'แก้สาเหตุแล้วกด "ส่งอีกครั้ง" น้องบอทจะลงให้ต่อเอง')
-          + '\nถ้ากด "ไว้ทีหลัง" แถวจะค้างไว้พร้อม ⚠️ กด 🌻 ส่งให้น้องบอท เมื่อพร้อม',
-      ok: 'ส่งอีกครั้ง',
-      cancel: 'ไว้ทีหลัง',
-    }, () => {
+    // ปัญหาที่พนักงานแก้เองได้ (ไฟล์เปิดค้าง) → มีปุ่ม "ลองอีกครั้ง"
+    // ปัญหาอื่น (ตรวจซ้ำไม่ตรง / หาไฟล์ไม่เจอ / ไม่มีสิทธิ์ / Excel error) → ปุ่ม "ปิด" อย่างเดียว ให้แจ้ง CONTACT
+    // ทุกกรณีน้องบอทไม่บันทึกอะไรเลย (ลงครบหรือไม่ลงเลย) แถวค้างไว้พร้อมป้าย "บันทึกไม่สำเร็จ" กดส่งใหม่ได้เมื่อแก้แล้ว
+    const msgs = [...new Set(list.filter(x => !x.ok).map(x => reason(x.msg)))];
+    const why = msgs.join(' / ');
+    const retry = msgs.every(m => /เปิดอยู่|ถูกใช้งาน|ล็อก/.test(m));
+    const head = ok ? `บันทึกสำเร็จ ${num(ok)} รายการ · ไม่สำเร็จ ${num(bad)} รายการ` : null;
+    const resend = () => {
       let n = 0;
       rows.forEach(r => { if (r.s === 'fail') { r.s = 'ready'; delete r.msg; n++; } });
       save(); render();
-      toast(`ส่งให้น้องบอทอีกครั้ง ${num(n)} ราย 🌻`);
-    });
+      toast(`ส่งบันทึกอีกครั้ง ${num(n)} รายการ`);
+    };
+    if (retry) {
+      ask({
+        ico: '⚠️',
+        title: head || 'ไฟล์ Excel เปิดอยู่',
+        text: 'กรุณาปิดไฟล์ TCS แล้วกด "ลองอีกครั้ง"\nยังไม่มีข้อมูลถูกบันทึก',
+        ok: 'ลองอีกครั้ง',
+        cancel: 'ภายหลัง',
+      }, resend);
+    } else {
+      ask({
+        ico: '⚠️',
+        title: head || `บันทึกไม่สำเร็จ ${num(bad)} รายการ`,
+        text: `สาเหตุ: ${why}\nยังไม่มีข้อมูลถูกบันทึก กรุณาแจ้ง${CONTACT}`,
+        ok: 'ปิด',
+        cancel: null,
+      });
+    }
   }
   return `ok:${ok} fail:${bad}`;
 }
@@ -583,12 +606,12 @@ function updateLight() {
   const on = now - (+bridge.getAttribute('data-ping') || 0) < BOT_TIMEOUT;
   light.classList.toggle('busy', busy);
   light.classList.toggle('on', on && !busy);
-  light.textContent = busy ? '🟡 น้องบอทกำลังลง Excel… อย่าเพิ่งปิด Chrome'
-                    : on   ? '🟢 น้องบอทพร้อม'
-                    :        '⚪ น้องบอทยังไม่ทำงาน';
-  light.title = busy ? 'รอจนมีป๊อปอัปแจ้งผล ระหว่างนี้แก้ข้อมูลในตารางไม่ได้'
-              : on   ? 'น้องบอทกำลังเฝ้าอยู่ กดส่งได้เลย'
-              :        'กดไอคอน TCS SunFlow บนเดสก์ท็อปเพื่อเปิดน้องบอท';
+  light.textContent = busy ? '🟡 กำลังบันทึก… กรุณาอย่าปิดหน้านี้'
+                    : on   ? '🟢 พร้อมใช้งาน'
+                    :        '⚪ ระบบยังไม่เปิด';
+  light.title = busy ? 'ระหว่างบันทึกจะแก้ไขข้อมูลในตารางไม่ได้'
+              : on   ? 'ส่งบันทึกได้เลย'
+              :        'เปิดระบบจากไอคอน TCS SunFlow บนเดสก์ท็อป';
   LOCK_WHILE_BUSY.forEach(id => { const el = $(id); if (el) el.inert = busy; });
   document.body.classList.toggle('botbusy', busy);
 }
@@ -604,7 +627,7 @@ function isDark() {
   return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
 }
 function themeLabel() {
-  $('themeBtn').textContent = isDark() ? '☀️ ธีมกลางวัน' : '🌙 เปลี่ยนธีม';
+  $('themeBtn').textContent = isDark() ? '☀️ โหมดสว่าง' : '🌙 โหมดมืด';
 }
 $('themeBtn').addEventListener('click', () => {
   document.documentElement.dataset.theme = isDark() ? 'light' : 'dark';
@@ -696,3 +719,4 @@ syncBridge();
 updateLight();
 setInterval(updateLight, 2000);
 if (!reducedMotion) startSky();
+ 
