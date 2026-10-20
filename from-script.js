@@ -68,7 +68,7 @@ function save() {
  
 function showSource() {
   $('src').textContent = rows.length
-    ? `ไฟล์ ${fileName} ·`
+    ? `ไฟล์ ${fileName} `
     : 'ยังไม่มีข้อมูล';
 }
  
