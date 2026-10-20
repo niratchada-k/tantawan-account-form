@@ -130,21 +130,7 @@ body {
   position: relative; height: 100%; max-width: 1700px; margin: 0 auto;
   display: flex; flex-direction: column; gap: 14px;
   padding: 26px 30px 22px;
-  background: var(--glass);
-  backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px);
-  border: 1px solid var(--glass-line); border-radius: 36px;
 }
-/* เส้นขอบรุ้งหมุนรอบกล่อง */
-.card::before {
-  content: ""; position: absolute; inset: -4px; border-radius: 40px; padding: 2px; pointer-events: none;
-  background: conic-gradient(from var(--angle), var(--line) 0deg 200deg, var(--accent) 260deg, var(--pink) 300deg, var(--line) 340deg 360deg);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: rot 7s linear infinite;
-}
-@keyframes rot { to { --angle: 360deg; } }
- 
  
 /* ---------- 4. หัวเว็บ + ไฟสถานะน้องบอท ---------- */
  
