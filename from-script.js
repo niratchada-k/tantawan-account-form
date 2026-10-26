@@ -12,16 +12,16 @@
    9. ธีมและพื้นหลัง
    10. เริ่มทำงาน
    ========================================================= */
- 
- 
+
+
 /* ---------- 1. ค่าตั้งต้นและตัวช่วย ---------- */
- 
+
 const STORAGE_KEY = 'tcs_queue';  // ชื่อที่ใช้เก็บข้อมูลในเบราว์เซอร์
 const BATCH = 200;                // วาดตารางทีละ 200 แถว เลื่อนใกล้ล่างสุดค่อยเติม
 const BOT_TIMEOUT = 10000;        // น้องบอทไม่แวะมาเกิน 10 วินาที = ไฟสถานะดับ
 const BUSY_MAX = 30 * 60000;      // กำลังลง Excel นานสุด 30 นาที เกินนี้ถือว่าน้องบอทหยุดไปแล้ว
 const CONTACT = 'ผู้ดูแลระบบ';    // คนที่ให้พนักงานติดต่อเมื่อบันทึกไม่สำเร็จและแก้เองไม่ได้ (เปลี่ยนเป็นชื่อคน/แผนกได้)
- 
+
 // ข้อมูลแต่ละแถว: { id, c: รหัส, n: ชื่อ, a: ที่อยู่, t: เลขภาษี, s: สถานะ, pad: เติม 0 แล้ว, msg: สาเหตุที่ลงไม่สำเร็จ }
 // สถานะ s: 'draft' = ยังไม่ส่ง / 'ready' = รอน้องบอท / 'fail' = ลงไม่สำเร็จ  (ลงสำเร็จแล้วแถวจะถูกเอาออกจากตาราง)
 let rows = [];
@@ -30,20 +30,20 @@ let filter = 'all';        // ปุ่มกรองที่เลือก�
 let shown = BATCH;         // จำนวนแถวที่วาดแล้ว
 let current = [];          // แถวที่ผ่านตัวกรองตอนนี้ [แถว, ลำดับใน rows]
 let dupCodes = new Set();  // รหัสที่ซ้ำกันในตาราง
- 
+
 const $ = id => document.getElementById(id);
 const clean = s => String(s ?? '').replace(/\s+/g, ' ').trim();   // ยุบช่องว่างซ้อน / ขึ้นบรรทัดใหม่ / ช่องว่างพิเศษจาก Excel ให้เหลือเว้นวรรคเดียว
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const num = n => n.toLocaleString();
 const isComplete = r => !!(r.n && r.a && r.t);
- 
+
 // เลขประจำแถว (รหัสซ้ำได้ เลยต้องมี id แยกแต่ละแถว ให้น้องบอทตอบกลับถูกแถว)
 let seq = 0;
 const newId = () => Date.now().toString(36) + '-' + (seq++).toString(36);
- 
- 
+
+
 /* ---------- 2. เก็บข้อมูลในเบราว์เซอร์ (ปิดเว็บแล้วเปิดใหม่ยังอยู่) ---------- */
- 
+
 function load() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
@@ -56,7 +56,7 @@ function load() {
     rows = [];
   }
 }
- 
+
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ file: fileName, rows }));
@@ -65,16 +65,16 @@ function save() {
   }
   syncBridge();   // อัปเดตงานในตู้ไปรษณีย์ให้น้องบอททุกครั้งที่ข้อมูลเปลี่ยน
 }
- 
+
 function showSource() {
   $('src').textContent = rows.length
-    ? `ไฟล์ ${fileName} `
+    ? `ไฟล์ ${fileName}`
     : 'ยังไม่มีข้อมูล';
 }
- 
- 
+
+
 /* ---------- 3. อ่านไฟล์ Excel ---------- */
- 
+
 // เลขภาษี: เก็บเป็นตัวเลขล้วนแบบข้อความ / ถ้าได้ 12 หลัก แปลว่า 0 ข้างหน้าหาย → เติม 0 ให้ครบ 13 หลัก
 function toTaxId(value) {
   let t = typeof value === 'number' ? Math.round(value).toString() : clean(value).replace(/\D/g, '');
@@ -82,7 +82,7 @@ function toTaxId(value) {
   if (padded) t = '0' + t;
   return { t, padded };
 }
- 
+
 // แบบรายงาน (เช่น 2F): คอลัมน์ D เป็นรหัส = เริ่มรายใหม่ / คอลัมน์ F เป็นป้าย บอกว่าค่าในคอลัมน์ G คืออะไร
 const CODE_PATTERN = /^[A-Z]{2,6}(-[A-Z0-9]+)+$/;
 function parseReport(sheet) {
@@ -107,7 +107,7 @@ function parseReport(sheet) {
   }
   return out;
 }
- 
+
 // แบบตาราง (มีแถวหัวคอลัมน์ เช่น รหัส | ชื่อ | ที่อยู่ | เลขประจำตัว): หาว่าคอลัมน์ไหนคืออะไร
 function headerMap(r) {
   const m = {};
@@ -121,7 +121,7 @@ function headerMap(r) {
   });
   return m;
 }
- 
+
 function parseTable(sheet) {
   // ใช้แถวหัวตารางแถวสุดท้ายใน 15 แถวแรก ที่มีคอลัมน์รหัส + อย่างน้อย 2 ใน 3 (ชื่อ / ที่อยู่ / เลขภาษี)
   let headerRow = -1, map = null;
@@ -130,7 +130,7 @@ function parseTable(sheet) {
     if (m.c != null && [m.n, m.a, m.t].filter(x => x != null).length >= 2) { headerRow = i; map = m; }
   }
   if (headerRow < 0) return [];
- 
+
   const out = [];
   for (const r of sheet.slice(headerRow + 1)) {
     const code = clean(r[map.c]);
@@ -146,7 +146,7 @@ function parseTable(sheet) {
   }
   return out;
 }
- 
+
 // อ่านไฟล์: ลองทุกชีต ใช้ชีตแรกที่อ่านข้อมูลได้ (ลองแบบรายงานก่อน แล้วค่อยแบบตาราง)
 function readFile(file) {
   const reader = new FileReader();
@@ -173,7 +173,7 @@ function readFile(file) {
       return;
     }
     got.forEach(r => { r.id = newId(); });
- 
+
     const apply = () => {
       rows = got; fileName = file.name; filter = 'all'; shown = BATCH;
       save(); showSource(); fillPrefix(); render();
@@ -191,44 +191,68 @@ function readFile(file) {
   };
   reader.readAsArrayBuffer(file);
 }
- 
- 
+
+
 /* ---------- 4. ตรวจที่อยู่ (ขึ้นสีเหลือง ตรวจสดทุกครั้งที่พิมพ์) ---------- */
- 
-// คำว่า "เงื่อนไขการชำระเงิน" ที่หลุดมาปนในที่อยู่ (ทั้งคำ หรือเศษคำ 5 ตัวอักษรขึ้นไป)
+/* กฎทั้งหมดตั้งจากปัญหาที่เจอจริงในไฟล์ 2F (5,416 ราย) */
+
+// คำว่า "เงื่อนไขการชำระเงิน" ที่หลุดมาปนในที่อยู่ (ทั้งคำ หรือเศษคำ 5 ตัวอักษรขึ้นไป) — ที่อยู่ถูกตัดขาด
 const STRAY = (w => new RegExp([...w].map((_, i) => w.slice(0, w.length - i)).filter(x => x.length >= 5).join('|'), 'g'))('เงื่อนไขการชำระเงิน');
- 
+
 // มีคำปน หรือท้ายที่อยู่เป็นเศษสั้น ๆ (เ / เง / เงื / เงื่)
 function hasStray(a) {
-  a = String(a ?? '');
   const found = STRAY.test(a);
   STRAY.lastIndex = 0;
-  return found || /(^|[\d\sก-๙])(เงื่|เงื|เง|เ)$/.test(a.trim());
+  return found || /(^|[\dA-Za-z\sก-๙])(เงื่|เงื|เง|เ)$/.test(a.trim());
 }
-// ท้ายที่อยู่มีแค่คำนำหน้า เช่น "จ." แล้วไม่มีชื่อต่อ
-const endsWithLabel = a => /(^|\s|\d)(จ\.|จังหวัด|อ\.|อำเภอ|ต\.|ตำบล|เขต|แขวง|ถ\.|ถนน|ซ\.|ซอย|ม\.|หมู่ที่|หมู่)\s*$/.test(a);
+// ท้ายที่อยู่มีแค่คำนำหน้า แล้วไม่มีชื่อต่อ เช่น "…อ.เมือง จ." หรือ "…จ. 20000"
+const endsWithLabel = a =>
+  /(^|\s|\d)(จ\.|จังหวัด|อ\.|อำเภอ|ต\.|ตำบล|เขต|แขวง|ถ\.|ถนน|ซ\.|ซอย|ม\.|หมู่ที่|หมู่)\s*$/.test(a) ||
+  /(^|\s)(จ\.|จังหวัด)\s*\d*\s*$/.test(a);
 // ไม่มีรหัสไปรษณีย์ 5 หลัก
-const noZip = a => !!a && !/(^|\D)\d{5}(\D|$)/.test(a);
- 
-// ผลตรวจ: 'stray' / 'label' / 'zip' / '' (ผ่าน)
-function addrFlag(r) {
-  if (!r.a) return '';
-  if (hasStray(r.a)) return 'stray';
-  if (endsWithLabel(r.a)) return 'label';
-  if (noZip(r.a)) return 'zip';
-  return '';
+const noZip = a => !/(^|\D)\d{5}(\D|$)/.test(a);
+
+// ชื่อจังหวัด 77 จังหวัด (มีชื่อจังหวัดแม้ไม่เขียน "จ." นำหน้า ถือว่ามีจังหวัด)
+const PROVINCES = ('กรุงเทพ กทม กระบี่ กาญจนบุรี กาฬสินธุ์ กำแพงเพชร ขอนแก่น จันทบุรี ฉะเชิงเทรา ชลบุรี ชัยนาท ชัยภูมิ ชุมพร ' +
+  'เชียงราย เชียงใหม่ ตรัง ตราด ตาก นครนายก นครปฐม นครพนม นครราชสีมา นครศรีธรรมราช นครสวรรค์ นนทบุรี นราธิวาส น่าน ' +
+  'บึงกาฬ บุรีรัมย์ ปทุมธานี ประจวบคีรีขันธ์ ปราจีนบุรี ปัตตานี อยุธยา พะเยา พังงา พัทลุง พิจิตร พิษณุโลก เพชรบุรี ' +
+  'เพชรบูรณ์ แพร่ ภูเก็ต มหาสารคาม มุกดาหาร แม่ฮ่องสอน ยโสธร ยะลา ร้อยเอ็ด ระนอง ระยอง ราชบุรี ลพบุรี ลำปาง ลำพูน เลย ' +
+  'ศรีสะเกษ สกลนคร สงขลา สตูล สมุทรปราการ สมุทรสงคราม สมุทรสาคร สระแก้ว สระบุรี สิงห์บุรี สุโขทัย สุพรรณบุรี ' +
+  'สุราษฎร์ธานี สุรินทร์ หนองคาย หนองบัวลำภู อ่างทอง อำนาจเจริญ อุดรธานี อุตรดิตถ์ อุทัยธานี อุบลราชธานี').split(' ');
+
+// ที่อยู่ไทยต้องมี ตำบล/แขวง + อำเภอ/เขต + จังหวัด (ที่อยู่ภาษาอังกฤษ/ต่างประเทศไม่ตรวจข้อนี้)
+// จับได้ทั้งที่ขาดจริง และที่พิมพ์ผิด เช่น ".กาญจนบุรี" "อแก้งคร้อ" "เขคปทุมวัน" "๖.เขารูปช้าง"
+function missingParts(a) {
+  if (!/[ก-๙]/.test(a)) return [];
+  const miss = [];
+  if (!/(ต\.|ตำบล|แขวง)/.test(a)) miss.push('ต.');
+  if (!/(อ\.|อำเภอ|เขต)/.test(a)) miss.push('อ.');
+  if (!/(จ\.|จังหวัด)/.test(a) && !PROVINCES.some(p => a.includes(p))) miss.push('จ.');
+  return miss;
 }
- 
- 
+
+// ผลตรวจที่อยู่: ป้ายที่จะแสดง (ว่าง = ที่อยู่สมบูรณ์ ไม่ขึ้นเหลือง)
+// ป้ายมี 2 แบบ: "ที่อยู่ต้องตรวจสอบ" (ถูกตัดขาด / จบด้วยคำนำหน้า / ขาด ต. อ. จ.) และ "ไม่มีรหัสไปรษณีย์"
+function addrIssues(r) {
+  const a = String(r.a ?? '').trim();
+  if (!a) return [];                                   // ที่อยู่ว่าง นับใน "มีช่องว่าง" แทน
+  const out = [];
+  if (hasStray(a) || endsWithLabel(a) || missingParts(a).length) out.push('ที่อยู่ต้องตรวจสอบ');
+  if (!hasStray(a) && noZip(a)) out.push('ไม่มีรหัสไปรษณีย์');
+  return out;
+}
+const addrFlag = r => addrIssues(r).length > 0;
+
+
 /* ---------- 5. วาดตาราง ---------- */
- 
+
 function findDuplicates() {
   const count = {}, dups = new Set();
   rows.forEach(r => { count[r.c] = (count[r.c] || 0) + 1; });
   for (const code in count) if (count[code] > 1) dups.add(code);
   return dups;
 }
- 
+
 // แถวที่ผ่านตัวกรอง / ค้นหา / กลุ่มรหัส
 function filteredRows() {
   const q = clean($('q').value).toLowerCase();
@@ -246,7 +270,7 @@ function filteredRows() {
     }
   });
 }
- 
+
 // ปุ่มกรอง (แสดงเฉพาะปุ่มที่มีจำนวน) + ข้อความสรุปด้านล่าง
 const CHIPS = [
   ['all',   'ทั้งหมด',          ''],
@@ -270,7 +294,7 @@ function renderChips() {
     .map(([key, label, cls]) =>
       `<button type="button" class="chip ${cls}" data-f="${key}" aria-pressed="${filter === key}"><span class="n">${num(count[key])}</span>${label}</button>`)
     .join('');
- 
+
   const waiting = rows.filter(r => r.s === 'draft' || r.s === 'fail').length;
   const ready = rows.filter(r => r.s === 'ready').length;
   $('footmsg').textContent = [
@@ -278,24 +302,18 @@ function renderChips() {
     ready && `รอบันทึก ${num(ready)} รายการ`,
   ].filter(Boolean).join(' · ');
 }
- 
+
 // ป้ายในคอลัมน์ "สถานะ"
-const ADDR_TAG = {
-  stray: 'มีข้อความ "เงื่อนไข…" ปน',
-  label: 'ที่อยู่ไม่ครบ',
-  zip:   'ไม่มีรหัสไปรษณีย์',
-};
 function tagsHtml(r) {
   let html = '';
   if (r.s === 'ready') html += '<span class="tag ready">รอบันทึก</span>';
   if (r.s === 'fail')  html += `<span class="tag fail" title="${esc(reason(r.msg))}">บันทึกไม่สำเร็จ</span>`;
-  const flag = addrFlag(r);
-  if (flag)            html += `<span class="tag cut">${ADDR_TAG[flag]}</span>`;
+  for (const t of addrIssues(r)) html += `<span class="tag cut">${t}</span>`;
   if (r.pad)           html += '<span class="tag pad">เติม 0</span>';
   if (dupCodes.has(r.c)) html += '<span class="tag dup">รหัสซ้ำ</span>';
   return html;
 }
- 
+
 const rowHtml = ([r, i]) => `
   <tr>
     <td class="code${dupCodes.has(r.c) ? ' dup' : ''}">${esc(r.c)}</td>
@@ -305,7 +323,7 @@ const rowHtml = ([r, i]) => `
     <td><div class="tags">${tagsHtml(r)}</div></td>
     <td class="act"><button type="button" class="del" data-del="${i}" aria-label="ลบแถว ${esc(r.c)}">✕</button></td>
   </tr>`;
- 
+
 function render() {
   dupCodes = findDuplicates();
   renderChips();
@@ -317,18 +335,18 @@ function render() {
   fitAll();
   showCount();
 }
- 
+
 function showCount() {
   $('pager').textContent = current.length ? `แสดง ${num(Math.min(shown, current.length))} จาก ${num(current.length)} แถว` : '';
 }
- 
+
 // เปลี่ยนตัวกรอง / ค้นหา → กลับไปบนสุด
 function resetView() {
   shown = BATCH;
   render();
   document.querySelector('.tablebox').scrollTop = 0;
 }
- 
+
 // เลื่อนใกล้ล่างสุด → เติมอีก 200 แถว (หน้าเดียวเลื่อนยาว ไม่ต้องกดหน้าถัดไป)
 function loadMore() {
   if (shown >= current.length) return;
@@ -338,7 +356,7 @@ function loadMore() {
   fitAll();
   showCount();
 }
- 
+
 // ช่องข้อความสูงตามเนื้อหา: Chrome / Edge รุ่นใหม่ทำเองด้วย CSS (field-sizing) ไม่ต้องคำนวณ
 const AUTO_SIZE = !!(window.CSS && CSS.supports && CSS.supports('field-sizing', 'content'));
 function fit(el) {
@@ -353,16 +371,16 @@ function fitAll() {
   const heights = els.map(e => e.scrollHeight);
   els.forEach((e, i) => { e.style.height = heights[i] + 2 + 'px'; });
 }
- 
+
 // ตัวเลือก "กลุ่มรหัส" (ส่วนหน้าเครื่องหมาย - ของรหัส เช่น EMP)
 function fillPrefix() {
   const prefixes = [...new Set(rows.map(r => r.c.split('-')[0]))].sort();
   $('prefix').innerHTML = '<option value="">ทุกกลุ่มรหัส</option>' + prefixes.map(p => `<option>${esc(p)}</option>`).join('');
 }
- 
- 
+
+
 /* ---------- 6. ป๊อปอัปและแจ้งเตือน ---------- */
- 
+
 let toastTimer;
 function toast(message) {
   const t = $('toast');
@@ -371,7 +389,7 @@ function toast(message) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
- 
+
 // ป๊อปอัปยืนยัน: กดปุ่มบน = ทำ onOk / ปุ่มล่างหรือ Esc = ปิด
 let onOk = null;
 function ask({ ico = '⚠️', title, text, ok = 'ตกลง', cancel = 'ยกเลิก' }, fn) {
@@ -388,10 +406,10 @@ function ask({ ico = '⚠️', title, text, ok = 'ตกลง', cancel = 'ย�
 $('mOk').addEventListener('click', () => { $('modal').hidden = true; if (onOk) onOk(); });
 $('mCancel').addEventListener('click', () => { $('modal').hidden = true; });
 addEventListener('keydown', e => { if (e.key === 'Escape') $('modal').hidden = true; });
- 
- 
+
+
 /* ---------- 7. แก้ข้อมูล / ลากไฟล์ / ปุ่ม ---------- */
- 
+
 // พิมพ์แก้ในตาราง: บันทึกทันที แถวกลับเป็น "ยังไม่ส่ง" (กันน้องบอทลงข้อมูลเก่าก่อนแก้)
 $('rows').addEventListener('input', e => {
   const el = e.target;
@@ -413,7 +431,7 @@ $('rows').addEventListener('input', e => {
   if (tags) tags.innerHTML = tagsHtml(r);
 });
 $('rows').addEventListener('change', () => { save(); renderChips(); });
- 
+
 // ปุ่ม ✕ ลบแถว
 $('rows').addEventListener('click', e => {
   const btn = e.target.closest('[data-del]');
@@ -425,7 +443,7 @@ $('rows').addEventListener('click', e => {
     toast(`ลบ ${r.c} แล้ว`);
   });
 });
- 
+
 // ตัวกรอง / ค้นหา / กลุ่มรหัส / เลื่อนตาราง
 $('chips').addEventListener('click', e => {
   const btn = e.target.closest('[data-f]');
@@ -437,7 +455,7 @@ document.querySelector('.tablebox').addEventListener('scroll', e => {
   const box = e.currentTarget;
   if (box.scrollTop + box.clientHeight > box.scrollHeight - 600) loadMore();
 }, { passive: true });
- 
+
 // เลือกไฟล์ / ลากไฟล์มาวาง
 $('file').addEventListener('change', e => {
   if (e.target.files[0]) readFile(e.target.files[0]);
@@ -450,7 +468,7 @@ drop.addEventListener('drop', e => {
   const f = e.dataTransfer.files[0];
   if (f) readFile(f);
 });
- 
+
 // 🌻 ส่งให้น้องบอท: ส่งทุกแถวที่ยังไม่ส่ง / ลงไม่สำเร็จ (รวมแถวที่มีช่องว่างและรหัสซ้ำ)
 $('send').addEventListener('click', e => {
   let n = 0;
@@ -464,7 +482,7 @@ $('send').addEventListener('click', e => {
     sparkBurst(b.left + b.width / 2, b.top + b.height / 2);
   }
 });
- 
+
 // 🗑️ ล้างทุกข้อมูล (ข้อมูลที่ลง Excel ไปแล้วไม่หาย)
 $('clearAll').addEventListener('click', () => {
   if (!rows.length) { toast('ไม่มีข้อมูล'); return; }
@@ -477,17 +495,17 @@ $('clearAll').addEventListener('click', () => {
     toast('ล้างข้อมูลแล้ว');
   });
 });
- 
- 
+
+
 /* ---------- 8. คุยกับน้องบอท + ไฟสถานะ ---------- */
 /* น้องบอท (UiPath) ใช้ Inject Js Script อ่าน/เขียน attribute ของกล่องซ่อน #sunflowBridge ("ตู้ไปรษณีย์")
      data-ready = งานที่รอน้องบอท {file, rows:[{id,c,n,a,t}]}   ← น้องบอทอ่าน
      data-ping  = เวลาที่น้องบอทแวะมาล่าสุด                    ← น้องบอทเขียนทุกรอบ (ใช้ทำไฟสถานะ)
      data-mark  = ผลการลง Excel [{id, ok, msg, row}]           ← น้องบอทเขียน เว็บอ่านแล้วล้างทิ้ง (row = แถวใน Excel ที่ลงสำเร็จ)
    ใช้กล่องบนหน้าเว็บแทนตัวแปร เพราะส่วนขยาย Chrome ของ UiPath อาจมองไม่เห็นตัวแปรของเว็บ แต่เห็นหน้าเว็บเสมอ */
- 
+
 const bridge = $('sunflowBridge') || document.body.appendChild(Object.assign(document.createElement('div'), { id: 'sunflowBridge', hidden: true }));
- 
+
 // งานที่รอน้องบอท (file = ชื่อไฟล์ export ไม่มีนามสกุล ใช้ตั้งชื่อไฟล์สำรอง เช่น Backup_2F_2026-10-12_0930.xlsx)
 function readyJson() {
   return JSON.stringify({
@@ -498,7 +516,7 @@ function readyJson() {
 function syncBridge() {
   bridge.setAttribute('data-ready', readyJson());
 }
- 
+
 // รับผลจากน้องบอท: ok = ลงและตรวจแล้ว → เอาออกจากตาราง / ไม่ ok = ค้างไว้พร้อม ⚠️ และสาเหตุ
 // ทำเฉพาะแถวที่ยัง "รอน้องบอท" (ถ้าถูกแก้ระหว่างนั้น แถวจะกลับเป็นยังไม่ส่ง และไม่ถูกนับ)
 // สาเหตุแบบสั้นสำหรับแสดงผล (ตัดคำซ้ำที่น้องบอทใส่มา เช่น "ลง Excel ไม่สำเร็จ:" / "(ไม่มีข้อมูลลง Excel)")
@@ -509,12 +527,12 @@ function reason(msg) {
     .replace(/\s*\(ไม่มีข้อมูลลง Excel\)/, '')
     .replace(/^ไฟล์ Excel ถูกเปิดอยู่$/, 'ไฟล์ Excel เปิดอยู่') || 'ไม่ทราบสาเหตุ';
 }
- 
+
 function applyMark(json) {
   let list;
   try { list = typeof json === 'string' ? JSON.parse(json) : json; }
   catch (e) { return 'bad json'; }
- 
+
   const waiting = new Map(rows.filter(r => r.s === 'ready').map(r => [r.id, r]));
   const done = new Set();
   let ok = 0, bad = 0;
@@ -527,7 +545,7 @@ function applyMark(json) {
   if (done.size) rows = rows.filter(r => !done.has(r));
   busySince = 0;   // ได้ผลแล้ว = น้องบอทลง Excel เสร็จรอบนี้
   save(); fillPrefix(); render(); updateLight();
- 
+
   if (ok && !bad) {
     // ป๊อปอัปค้างจนกว่าจะกด "ตกลง" (กันพนักงานพลาดไม่เห็น) + บอกแถวใน Excel ถ้าน้องบอทส่งมา
     const nums = list.filter(x => x.ok && x.row).map(x => +x.row).filter(Boolean);
@@ -576,7 +594,7 @@ function applyMark(json) {
   }
   return `ok:${ok} fail:${bad}`;
 }
- 
+
 // น้องบอทแวะมา (data-ping) ตอนมีงานรอ = น้องบอทหยิบงานไปแล้ว → กำลังลง Excel
 // น้องบอทวางผลใน data-mark → อ่านทันทีแล้วล้างทิ้ง
 let busySince = 0;
@@ -591,7 +609,7 @@ new MutationObserver(list => {
   }
   updateLight();
 }).observe(bridge, { attributes: true, attributeFilter: ['data-mark', 'data-ping'] });
- 
+
 // ไฟสถานะ 3 แบบ
 //   🟡 กำลังลง Excel = น้องบอทหยิบงานไปแล้ว ยังไม่ส่งผลกลับ (ตอนนี้น้องบอทอยู่ใน Excel จึงไม่ได้แวะมาที่เว็บ)
 //   🟢 พร้อม        = น้องบอทแวะมาภายใน 10 วินาที
@@ -615,13 +633,13 @@ function updateLight() {
   LOCK_WHILE_BUSY.forEach(id => { const el = $(id); if (el) el.inert = busy; });
   document.body.classList.toggle('botbusy', busy);
 }
- 
+
 // เปิดไว้ให้ลองเรียกจาก Console ได้ (เช่น sunflow.ready())
 window.sunflow = { ready: readyJson, mark: applyMark };
- 
- 
+
+
 /* ---------- 9. ธีมและพื้นหลัง ---------- */
- 
+
 function isDark() {
   const t = document.documentElement.dataset.theme;
   return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
@@ -633,13 +651,13 @@ $('themeBtn').addEventListener('click', () => {
   document.documentElement.dataset.theme = isDark() ? 'light' : 'dark';
   themeLabel();
 });
- 
+
 // ดาวกระพริบ + ผงประกายตามเมาส์ (จากเว็บเดิม) — ปิดเองถ้าเครื่องตั้งค่าลดการเคลื่อนไหว
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const TINTS = ['124,108,240', '240,165,200', '140,190,240', '250,205,140'];
 const SPARKS = ['✦', '✧', '⋆', '✨'];
 const COLORS = ['#a99cff', '#f0a5c8', '#8cbef0', '#fad08c'];
- 
+
 function makeDust(x, y, symbol, color, dx, dy, size, life) {
   const d = document.createElement('div');
   d.className = 'dust';
@@ -654,7 +672,7 @@ function makeDust(x, y, symbol, color, dx, dy, size, life) {
   document.body.appendChild(d);
   setTimeout(() => d.remove(), (life || 1000) + 50);
 }
- 
+
 // ประกายแตกออกเป็นวง (ตอนลากไฟล์สำเร็จ / กดส่ง)
 function sparkBurst(x, y, n = 24) {
   if (reducedMotion) return;
@@ -663,7 +681,7 @@ function sparkBurst(x, y, n = 24) {
     makeDust(x, y, SPARKS[i % 4], COLORS[i % 4], Math.cos(angle) * dist, Math.sin(angle) * dist, 10 + Math.random() * 12, 1100);
   }
 }
- 
+
 function startSky() {
   const cv = $('sky'), ctx = cv.getContext('2d');
   let stars = [], W = 0, H = 0;
@@ -696,20 +714,20 @@ function startSky() {
   addEventListener('resize', () => { resize(); fitAll(); });
   resize();
   draw();
- 
+
   let last = 0;
   addEventListener('pointermove', e => {
     const now = Date.now();
-    if (now - last < 30) return;
+    if (now - last < 70) return;
     last = now;
     const pick = Math.floor(Math.random() * 4);
     makeDust(e.clientX, e.clientY, SPARKS[pick], COLORS[Math.floor(Math.random() * 4)], Math.random() * 46 - 23, Math.random() * 38 + 14);
   });
 }
- 
- 
+
+
 /* ---------- 10. เริ่มทำงาน ---------- */
- 
+
 load();
 showSource();
 fillPrefix();
@@ -719,4 +737,3 @@ syncBridge();
 updateLight();
 setInterval(updateLight, 2000);
 if (!reducedMotion) startSky();
- 
